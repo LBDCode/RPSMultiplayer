@@ -1,0 +1,17 @@
+img {
+    width: 60px;
+    height: 60px;
+}
+
+img:hover, .selected {
+    border: 3px solid grey;
+    border-radius: 50%;
+}
+
+.hidden {
+    display: none;
+}
+
+.unclickable {
+    pointer-events:none;
+}
