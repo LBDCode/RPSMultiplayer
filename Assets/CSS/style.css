@@ -1,10 +1,17 @@
 body {
     background-color: #fff;
+    background-image: url("../images/background.png");
+    background-repeat: no-repeat;
+    background-size: cover; 
 }
 
 header {
-    color: lightskyblue;
+    margin-top: 40px;
+    font-weight: 700;
+    font-family: 'Volkhov', serif;
+    color: skyblue;
     padding: 15px;
+    text-align: center;
 }
 
 .mainArea {
@@ -12,6 +19,7 @@ header {
     background-color: #fff;
     padding: 5px;
     max-width: 75%;
+
 }
 
 .play {
@@ -31,7 +39,13 @@ img:hover, .selected {
 }
 
 .game-messages {
-    color: rgb(238, 74, 45);
+    color: rgb(242, 96, 103);
+}
+
+#nameSbmt {
+    background: skyblue;
+    color: #fff;
+    border-color:  skyblue;
 }
 
 .chatArea{
@@ -51,6 +65,12 @@ img:hover, .selected {
     overflow-y: scroll;
     line-height: 80%;
     padding: 5px;
+}
+
+#msgSubmit {
+    background: rgb(242, 96, 103);
+    color: #fff;
+    border-color:  rgb(242, 96, 103);
 }
 
 .hidden {
