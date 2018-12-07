@@ -1,5 +1,3 @@
-
-
 //database config
 var config = {
   apiKey: "AIzaSyDXOubfrj7FhhrDLPKxk-3Fc9Yur_0Te_Y",
@@ -14,26 +12,23 @@ firebase.initializeApp(config);
 
 var database = firebase.database();
 
-var player1Wins = 0;
-var player2Wins = 0;
-var player1Losses = 0;
-var player2Losses = 0;
-var ties = 0;
-var name;
 
+var name;
+var numPlayers;
 var gameState = $("#gamestate").val().trim();
 
-var connectionsRef = database.ref("/connections");
-var connectedRef = database.ref(".info/connected");
 var player1Ref = database.ref("/players/player1");
-var player2Ref = database.ref("players/player2");
+var player2Ref = database.ref("/players/player2");
+var chatRef = database.ref("/chat");
 
-var 
+
 
 
 //check for players
 function checkPlayers() {
-  var numPlayers;
+  var connectionsRef = database.ref("/connections");
+  var connectedRef = database.ref(".info/connected");
+  
   connectedRef.on("value", function(snap) {
     if (snap.val()) {
       var con = connectionsRef.push(true);
@@ -49,6 +44,8 @@ function checkPlayers() {
       $("#num-players").text("Ready to play.");
     } else if (numPlayers === 1) {
       $("#num-players").text("Waiting for second player");
+      chatRef.remove();
+      $("#chatHist").empty();
     } else if (numPlayers > 2) {
       $("#num-players").text("Only two people will be able to play.");
     } 
@@ -81,6 +78,7 @@ $("#nameSbmt").on("click", function() {
 
   if (!snapP1.exists()) {
     player1Ref.onDisconnect().remove();
+  ;
     playerNum = 1;
 
     player1Ref.set({
@@ -96,6 +94,7 @@ $("#nameSbmt").on("click", function() {
 // if no player 2
   } else if (!snapP2.exists()) {
       player2Ref.onDisconnect().remove();
+      
       playerNum = 2;
     
       player2Ref.set({
@@ -110,14 +109,40 @@ $("#nameSbmt").on("click", function() {
   } 
 });
 
+//chat
+$("#msgSubmit").on("click", function() {
+  event.preventDefault();
+  
+  var msg = $("#newMsg").val();
+  
+  chatRef.push({
+    chName: name,
+    message: msg,
+    timeStmp: firebase.database.ServerValue.TIMESTAMP
+  })
 
-//chat stuff goes here
+  $("#newMsg").val("");
+});
+
+chatRef.orderByChild("timeStmp").on("child_added", function(snap) {
+  var msg = snap.val().chName + ": " + snap.val().message;
+  var msgDiv = $("<p>");
+  msgDiv.text(msg);
+  msgDiv.appendTo($("#chatHist"));
+
+  $('#chatHist').stop ().animate ({
+    scrollTop: $('#chatHist')[0].scrollHeight
+  });
+});
+
+
 
 
 
 //
 $(".rpsSelect").on("click", function() {
   $(this).addClass("selected");
+  $(".rpsSelect").addClass("unclickable");
   
   var selection = $(this).attr("id");
   var playerSlct = selection.slice(-2);
@@ -151,7 +176,7 @@ database.ref("/players").on("value", function(snapshot) {
 function updateUI(pName, pNum) {
   var playDiv = $(".play" + pNum + "RPS");
   var scoreDiv = $("#player" + pNum + "Score");
-  $("#num-players").text("Hi " + pName + ". You're player " + pNum + " .");
+  $("#num-players").text("Hi " + pName + ". You're player " + pNum + ".");
   $(".chatArea ").removeClass("hidden");
   playDiv.removeClass("hidden");
   scoreDiv.removeClass("hidden");
@@ -159,36 +184,49 @@ function updateUI(pName, pNum) {
 };
 
 //RPS logic
+var scoreObj = {
+  player1Wins: 0,
+  player2Wins: 0,
+  player1Losses: 0,
+  player2Losses: 0,
+  ties: 0
+
+}
+
+
 function checkRPS(player1Choice, player2Choice) {
+
+
   $(".rpsSelect").removeClass("selected");
+  $(".rpsSelect").removeClass("unclickable");
   
   if((player1Choice === "rock" && player2Choice === "scissors") || (player1Choice === "paper" && player2Choice === "rock") || (player1Choice == "scissors" && player2Choice === "paper")) {
     //player1 wins
-    player1Wins++;
-    player2Losses++;
+    scoreObj.player1Wins++;
+    scoreObj.player2Losses++;
     console.log("Player 1 wins")
   } else if ((player1Choice === player2Choice)) {
     //tie
-    ties++;
+    scoreObj.ties++;
     console.log("Tie")
   } else {
     //player2 wins
-    player1Losses++;
-    player2Wins++;
+    scoreObj.player1Losses++;
+    scoreObj.player2Wins++;
     console.log("Player 2 wins")
   }
   //reset RPS choice vars
   player1Ref.update({
     curRPS: null,
-    wins: player1Wins,
-    losses: player1Losses,
-    ties: ties
+    wins: scoreObj.player1Wins,
+    losses: scoreObj.player1Losses,
+    ties: scoreObj.ties
   });
   player2Ref.update({
     curRPS: null,
-    wins: player2Wins,
-    losses: player2Losses,
-    ties: ties
+    wins: scoreObj.player2Wins,
+    losses: scoreObj.player2Losses,
+    ties: scoreObj.ties
   });
 
   updateScore();
@@ -209,4 +247,8 @@ function updateScore() {
 
 
 checkPlayers();
+
+//fix gameState messages
+//reset chat on player leaving
+
 
